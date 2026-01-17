@@ -14,6 +14,14 @@ else
     -- "undefined"
 end
 
+add_requireconfs("python", "**.python", {
+    override = true,
+    system = true,
+    configs = {
+        headeronly = is_plat("linux")
+    }
+})
+
 target("xmake-test")
     add_files("ncnn.cc")
     add_packages("my-ncnn")

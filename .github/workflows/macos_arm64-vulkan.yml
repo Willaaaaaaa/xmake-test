@@ -2,6 +2,7 @@ name: macOS with vk
 
 on:
   workflow_dispatch:
+  push:
 
 jobs:
   build:
@@ -16,8 +17,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     concurrency:
-        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.arch }}-${{ matrix.kind }}
-        cancel-in-progress: false
+        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.arch }}-${{ matrix.kind }}-vk
+        cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
       - uses: xmake-io/github-action-setup-xmake@v1
@@ -27,13 +28,14 @@ jobs:
 
       - name: Download
         run: |
+          brew install tree
           wget -q https://github.com/KhronosGroup/MoltenVK/releases/download/v1.2.8/MoltenVK-all.tar
           tar -xf MoltenVK-all.tar
           echo NCNN_VULKAN_DRIVER=$GITHUB_WORKSPACE/MoltenVK/dylib/macOS/libMoltenVK.dylib >> $GITHUB_ENV
 
       - name: Configure
         run: |
-          xmake f -y -a ${{ matrix.arch }} -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
+          xmake f -vD -y -a ${{ matrix.arch }} -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
 
       - name: Build
         run: |

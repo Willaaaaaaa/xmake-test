@@ -2,6 +2,7 @@ name: macOS
 
 on:
   workflow_dispatch:
+  push:
 
 jobs:
   build:
@@ -17,7 +18,7 @@ jobs:
 
     concurrency:
         group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.arch }}-${{ matrix.kind }}
-        cancel-in-progress: false
+        cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
       - uses: xmake-io/github-action-setup-xmake@v1
@@ -27,12 +28,11 @@ jobs:
 
       - name: Download
         run: |
-          export LIBRARY_PATH="$LIBRARY_PATH:/opt/homebrew/lib/gcc/14/"
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/homebrew/lib/gcc/14/"
+          brew install tree
 
       - name: Configure
         run: |
-          xmake f -y -a ${{ matrix.arch }} -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
+          xmake f -vD -y -a ${{ matrix.arch }} -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
 
       - name: Build
         run: |
