@@ -1,0 +1,44 @@
+name: macOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14]
+        arch: [arm64]
+        kind: [static, shared]
+        ncnn_ver: [20250916, 20260113]
+
+    runs-on: ${{ matrix.os }}
+
+    concurrency:
+        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.arch }}-${{ matrix.kind }}
+        cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: branch@master
+          actions-cache-folder: '.xmake-cache'
+
+      - name: Download
+        run: |
+          export LIBRARY_PATH="$LIBRARY_PATH:/opt/homebrew/lib/gcc/14/"
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/homebrew/lib/gcc/14/"
+
+      - name: Configure
+        run: |
+          xmake f -y -a ${{ matrix.arch }} -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
+
+      - name: Build
+        run: |
+          xmake build -vD
+
+      - name: Install
+        run: |
+          xmake install -vD -o ./install
+          tree ./install
