@@ -14,7 +14,7 @@ else
     -- "undefined"
 end
 
-add_requireconfs("python", "**.python", {
+add_requireconfs("**.python 3.x", {
     override = true,
     system = true,
     configs = {
