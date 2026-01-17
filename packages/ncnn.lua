@@ -27,6 +27,8 @@ package("my-ncnn")
 
     add_deps("cmake")
 
+    add_includedirs("include/ncnn")
+
     if is_plat("android") then
         add_syslinks("android")
     end
@@ -55,7 +57,7 @@ package("my-ncnn")
                 end
             end
         end
-        if package:config("vulkan") then
+        if package:config("simpleocv") then
             package:add("defines", "USE_NCNN_SIMPLEOCV")
         end
 
@@ -113,7 +115,7 @@ package("my-ncnn")
     on_test(function (package)
         if not package:config("c_api") then
             assert(package:check_cxxsnippets({test = [[
-                #include <ncnn/net.h>
+                #include <net.h>
                 void test() {
                     ncnn::Net net;
                     net.load_param("model.param");
@@ -121,7 +123,7 @@ package("my-ncnn")
             ]]}, {configs = package:config("vulkan") and {languages = "c++11"} or {}}))
         else
             assert(package:check_csnippets({test = [[
-                #include <ncnn/c_api.h>
+                #include <c_api.h>
                 void test() {
                     const char* ver = ncnn_version();
                 }

@@ -6,10 +6,8 @@ includes("packages/*.lua")
 option("ncnn_ver", {default = "undefined", showmenu = true, description = "ncnn version"})
 add_options("ncnn_ver")
 
-if is_config("ncnn_ver", "20260113") then
-    add_requires("my-ncnn[vulkan,simpleocv]" .. " 20260113")
-elseif is_config("ncnn_ver", "20250916") then
-    add_requires("my-ncnn[vulkan,simpleocv]" .. " 20250916")
+if has_config("ncnn_ver") then
+    add_requires("my-ncnn[vulkan,simpleocv,shared=" .. (is_kind("shared") and "true" or "false") .. "] " .. get_config("ncnn_ver"))
 else
     -- "undefined"
 end
