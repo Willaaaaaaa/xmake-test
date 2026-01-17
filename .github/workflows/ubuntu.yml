@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     concurrency:
-        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-Linux-${{ matrix.kind }}-${{ matrix.mode }}
+        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-Linux-${{ matrix.kind }}-${{ matrix.mode }}-${{ matrix.ncnn_ver }}
         cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
@@ -32,6 +32,7 @@ jobs:
 
       - name: Configure
         run: |
+          python3 --version
           xmake f -vD -y -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
 
       - name: Build
