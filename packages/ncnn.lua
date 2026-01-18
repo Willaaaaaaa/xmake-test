@@ -47,14 +47,18 @@ package("my-ncnn")
             package:add("deps", "my-glslang-nihui " .. glslang_ver)
             if package:is_plat("macosx", "iphoneos") then
                 local has_moltenvk = os.getenv("VK_ICD_FILENAMES") or os.getenv("NCNN_VULKAN_DRIVER")
+                print("==================================")
+                print("getenv result:")
+                print(has_moltenvk)
+                print("==================================")
                 if package:version() and package:version():lt("20260113") or not has_moltenvk then
                     package:add("deps", "moltenvk", {configs = {shared = package:config("shared")}})
-                    package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
-                    if package:is_plat("macosx") then
-                        package:add("frameworks", "IOKit", "AppKit")
-                    else
-                        package:add("frameworks", "UIKit")
-                    end
+                end
+                package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
+                if package:is_plat("macosx") then
+                    package:add("frameworks", "IOKit", "AppKit")
+                else
+                    package:add("frameworks", "UIKit")
                 end
             end
         end
