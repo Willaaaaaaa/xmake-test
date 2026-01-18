@@ -46,17 +46,23 @@ package("my-ncnn")
         if package:config("vulkan") then
             package:add("deps", "my-glslang-nihui " .. glslang_ver)
             if package:is_plat("macosx", "iphoneos") then
-                package:setenv("VK_ICD_FILENAMES", os.getenv("VK_ICD_FILENAMES"))
-                package:setenv("NCNN_VULKAN_DRIVER", os.getenv("NCNN_VULKAN_DRIVER"))
-                local has_moltenvk = os.getenv("VK_ICD_FILENAMES") or os.getenv("NCNN_VULKAN_DRIVER")
+                local icd = os.getenv("VK_ICD_FILENAMES")
+                local vk_driver = os.getenv("NCNN_VULKAN_DRIVER")
+                if icd then
+                    package:addenv("VK_ICD_FILENAMES", icd)
+                end
+                if vk_driver then
+                    package:addenv("NCNN_VULKAN_DRIVER", vk_driver)
+                end
+                local has_moltenvk = package:getenv("VK_ICD_FILENAMES") or package:getenv("NCNN_VULKAN_DRIVER")
                 print("================================")
                 print("Package env:")
-                print("VK_ICD_FILENAMES   = %s", package:getenv("VK_ICD_FILENAMES"))
-                print("NCNN_VULKAN_DRIVER = %s", package:getenv("NCNN_VULKAN_DRIVER"))
+                print("VK_ICD_FILENAMES   = %s", package:getenv("VK_ICD_FILENAMES") or "nil")
+                print("NCNN_VULKAN_DRIVER = %s", package:getenv("NCNN_VULKAN_DRIVER") or "nil")
                 print("--------------------------------")
                 print("OS env:")
-                print("VK_ICD_FILENAMES   = %s", os.getenv("VK_ICD_FILENAMES"))
-                print("NCNN_VULKAN_DRIVER = %s", os.getenv("NCNN_VULKAN_DRIVER"))
+                print("VK_ICD_FILENAMES   = %s", os.getenv("VK_ICD_FILENAMES") or "nil")
+                print("NCNN_VULKAN_DRIVER = %s", os.getenv("NCNN_VULKAN_DRIVER") or "nil")
                 print("================================")
                 if package:version() and package:version():lt("20260113") or not has_moltenvk then
                     package:add("deps", "moltenvk", {configs = {shared = package:config("shared")}})
@@ -91,7 +97,6 @@ package("my-ncnn")
         local configs = {
             "-DNCNN_BUILD_EXAMPLES=OFF",
             "-DNCNN_BUILD_TOOLS=OFF",
-            "-DNCNN_SIMPLEOCV=OFF",
             "-DNCNN_BUILD_BENCHMARK=OFF",
             "-DNCNN_BUILD_TESTS=OFF",
             "-DNCNN_PYTHON=OFF",
