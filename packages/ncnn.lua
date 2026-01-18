@@ -46,19 +46,17 @@ package("my-ncnn")
         if package:config("vulkan") then
             package:add("deps", "my-glslang-nihui " .. glslang_ver)
             if package:is_plat("macosx", "iphoneos") then
-                if package:version() and package:version():lt("20260113") then
+                local has_moltenvk = os.getenv("VK_ICD_FILENAMES") or os.getenv("NCNN_VULKAN_DRIVER")
+                if package:version() and package:version():lt("20260113") or not has_moltenvk then
                     package:add("deps", "moltenvk", {configs = {shared = package:config("shared")}})
-                end
-                package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
-                if package:is_plat("macosx") then
-                    package:add("frameworks", "IOKit", "AppKit")
-                else
-                    package:add("frameworks", "UIKit")
+                    package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
+                    if package:is_plat("macosx") then
+                        package:add("frameworks", "IOKit", "AppKit")
+                    else
+                        package:add("frameworks", "UIKit")
+                    end
                 end
             end
-        end
-        if package:config("simpleocv") then
-            package:add("defines", "USE_NCNN_SIMPLEOCV")
         end
 
         if package:is_plat("linux", "bsd") and package:config("threads") then
@@ -94,8 +92,8 @@ package("my-ncnn")
         table.insert(configs, "-DNCNN_OPENMP=" .. (package:config("openmp") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_THREADS=" .. (package:config("threads") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_C_API=" .. (package:config("c_api") and "ON" or "OFF"))
-        table.insert(configs, "-DNCNN_SIMPLEOCV=" .. (package:config("simpleocv") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_SIMPLEOMP=" .. (package:config("simpleomp") and "ON" or "OFF"))
+        table.insert(configs, "-DNCNN_SIMPLEOCV=" .. (package:config("simpleocv") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_SIMPLESTL=" .. (package:config("simplestl") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_SIMPLEMATH=" .. (package:config("simplemath") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_PIXEL=" .. (package:config("pixel") and "ON" or "OFF"))
@@ -104,8 +102,8 @@ package("my-ncnn")
         table.insert(configs, "-DNCNN_PIXEL_DRAWING=" .. (package:config("pixel_drawing") and "ON" or "OFF"))
         if package:config("vulkan") then
             table.insert(configs, "-DCMAKE_CXX_STANDARD=11")
-            if package:version() and package:version():lt("20260113") and package:is_plat("macosx", "iphoneos") then
-                local moltenvk = package:dep("moltenvk")
+            local moltenvk = package:dep("moltenvk")
+            if moltenvk then
                 table.insert(configs, "-DVulkan_LIBRARY=" .. path.join(moltenvk:installdir("lib"), "libMoltenVK." .. (moltenvk:config("shared") and "dylib" or "a")))
             end
         end
