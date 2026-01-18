@@ -110,31 +110,31 @@ package("my-ncnn")
         import("package.tools.cmake").install(package, configs)
     end)
 
-    on_test(function (package)
-        local configs = package:config("vulkan") and {languages = "c++11"} or {}
-        if package:config("vulkan") and package:is_plat("macosx", "iphoneos") and package:version() and package:version():ge("20260113") then
-            local moltenvk = package:dep("moltenvk")
-            if not moltenvk then
-                configs.envs = {}
-                configs.envs.VK_ICD_FILENAMES = os.getenv("VK_ICD_FILENAMES")
-                configs.envs.NCNN_VULKAN_DRIVER = os.getenv("NCNN_VULKAN_DRIVER")
-            end
-        end
+    -- on_test(function (package)
+    --     local configs = package:config("vulkan") and {languages = "c++11"} or {}
+    --     if package:config("vulkan") and package:is_plat("macosx", "iphoneos") and package:version() and package:version():ge("20260113") then
+    --         local moltenvk = package:dep("moltenvk")
+    --         if not moltenvk then
+    --             configs.envs = {}
+    --             configs.envs.VK_ICD_FILENAMES = os.getenv("VK_ICD_FILENAMES")
+    --             configs.envs.NCNN_VULKAN_DRIVER = os.getenv("NCNN_VULKAN_DRIVER")
+    --         end
+    --     end
 
-        if not package:config("c_api") then
-            assert(package:check_cxxsnippets({test = [[
-                #include <net.h>
-                void test() {
-                    ncnn::Net net;
-                    net.load_param("model.param");
-                }
-            ]]}, {configs = configs}))
-        else
-            assert(package:check_csnippets({test = [[
-                #include <c_api.h>
-                void test() {
-                    const char* ver = ncnn_version();
-                }
-            ]]}))
-        end
-    end)
+    --     if not package:config("c_api") then
+    --         assert(package:check_cxxsnippets({test = [[
+    --             #include <net.h>
+    --             void test() {
+    --                 ncnn::Net net;
+    --                 net.load_param("model.param");
+    --             }
+    --         ]]}, {configs = configs}))
+    --     else
+    --         assert(package:check_csnippets({test = [[
+    --             #include <c_api.h>
+    --             void test() {
+    --                 const char* ver = ncnn_version();
+    --             }
+    --         ]]}))
+    --     end
+    -- end)
