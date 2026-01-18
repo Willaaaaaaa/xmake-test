@@ -30,7 +30,7 @@ jobs:
           brew install tree
           wget -q https://github.com/KhronosGroup/MoltenVK/releases/download/v1.2.8/MoltenVK-all.tar
           tar -xf MoltenVK-all.tar
-          echo NCNN_VULKAN_DRIVER=$GITHUB_WORKSPACE/MoltenVK/dylib/macOS/libMoltenVK.dylib >> $GITHUB_ENV
+          echo "NCNN_VULKAN_DRIVER=$GITHUB_WORKSPACE/MoltenVK/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib" >> $GITHUB_ENV
 
       - name: Configure
         run: |
