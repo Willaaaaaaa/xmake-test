@@ -47,18 +47,14 @@ package("my-ncnn")
             package:add("deps", "my-glslang-nihui " .. glslang_ver)
             if package:is_plat("macosx", "iphoneos") then
                 local has_moltenvk = os.getenv("VK_ICD_FILENAMES") or os.getenv("NCNN_VULKAN_DRIVER")
-                print("==================================")
-                print("getenv result:")
-                print(has_moltenvk)
-                print("==================================")
                 if package:version() and package:version():lt("20260113") or not has_moltenvk then
                     package:add("deps", "moltenvk", {configs = {shared = package:config("shared")}})
-                end
-                package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
-                if package:is_plat("macosx") then
-                    package:add("frameworks", "IOKit", "AppKit")
-                else
-                    package:add("frameworks", "UIKit")
+                    package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
+                    if package:is_plat("macosx") then
+                        package:add("frameworks", "IOKit", "AppKit")
+                    else
+                        package:add("frameworks", "UIKit")
+                    end
                 end
             end
         end
@@ -115,6 +111,16 @@ package("my-ncnn")
     end)
 
     on_test(function (package)
+        local configs = package:config("vulkan") and {languages = "c++11"} or {}
+        if package:config("vulkan") and package:is_plat("macosx", "iphoneos") and package:version() and package:version():ge("20260113") then
+            local moltenvk = package:dep("moltenvk")
+            if not moltenvk then
+                configs.envs = {}
+                configs.envs.VK_ICD_FILENAMES = os.getenv("VK_ICD_FILENAMES")
+                configs.envs.NCNN_VULKAN_DRIVER = os.getenv("NCNN_VULKAN_DRIVER")
+            end
+        end
+
         if not package:config("c_api") then
             assert(package:check_cxxsnippets({test = [[
                 #include <net.h>
@@ -122,7 +128,7 @@ package("my-ncnn")
                     ncnn::Net net;
                     net.load_param("model.param");
                 }
-            ]]}, {configs = package:config("vulkan") and {languages = "c++11"} or {}}))
+            ]]}, {configs = configs}))
         else
             assert(package:check_csnippets({test = [[
                 #include <c_api.h>
