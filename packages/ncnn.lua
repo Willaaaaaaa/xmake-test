@@ -44,7 +44,6 @@ package("my-ncnn")
     on_load(function (package)
         local ncnn_ver = package:version()
         local glslang = "my-glslang-nihui" .. (ncnn_ver and (" " .. ncnn_ver) or "")
-        print("---info---\nglslang = %s\n--------", glslang)
         if package:config("vulkan") then
             package:add("deps", glslang)
             if package:is_plat("macosx", "iphoneos") then
@@ -76,6 +75,8 @@ package("my-ncnn")
                     else
                         package:add("frameworks", "UIKit")
                     end
+                else
+                    package:add("links", vk_driver)
                 end
             end
         end
@@ -98,9 +99,12 @@ package("my-ncnn")
     end)
 
     on_install(function (package)
-        io.replace("src/CMakeLists.txt", "if(NOT NCNN_SHARED_LIB AND APPLE)", "if(APPLE)", {plain = true})
-        local _, count = io.replace("src/CMakeLists.txt", "                if(NOT NCNN_SHARED_LIB)", "                if(1)", {plain = true})
-        print("---info---\nio.replace() count = %d\n--------", count)
+        local moltenvk = package:dep("moltenvk")
+        if moltenvk and not moltenvk:config("shared") then
+            io.replace("src/CMakeLists.txt", "if(NOT NCNN_SHARED_LIB AND APPLE)", "if(APPLE)", {plain = true})
+            local _, count = io.replace("src/CMakeLists.txt", "                if(NOT NCNN_SHARED_LIB)", "                if(1)", {plain = true})
+            print("---info---\nio.replace() count = %d\n--------", count)
+        end
         local configs = {
             "-DNCNN_BUILD_EXAMPLES=OFF",
             "-DNCNN_BUILD_TOOLS=OFF",
@@ -125,7 +129,6 @@ package("my-ncnn")
         table.insert(configs, "-DNCNN_PIXEL_DRAWING=" .. (package:config("pixel_drawing") and "ON" or "OFF"))
         if package:config("vulkan") then
             table.insert(configs, "-DCMAKE_CXX_STANDARD=11")
-            local moltenvk = package:dep("moltenvk")
             if moltenvk then
                 table.insert(configs, "-DVulkan_LIBRARY=" .. path.join(moltenvk:installdir("lib"), "libMoltenVK." .. (moltenvk:config("shared") and "dylib" or "a")))
             end

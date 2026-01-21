@@ -29,8 +29,8 @@ jobs:
       - name: Download
         run: |
           brew install tree
-          wget -q https://github.com/KhronosGroup/MoltenVK/releases/download/v1.2.8/MoltenVK-all.tar
-          tar -xf MoltenVK-all.tar
+          wget -q https://github.com/KhronosGroup/MoltenVK/releases/download/v1.4.1/MoltenVK-macos.tar
+          tar -xf MoltenVK-macos.tar
           ls
           tree MoltenVK
           MVK_PATH=$(find $GITHUB_WORKSPACE/MoltenVK -name "libMoltenVK.dylib" | head -n 1)
