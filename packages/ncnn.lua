@@ -55,7 +55,7 @@ package("my-ncnn")
                 if vk_driver then
                     package:addenv("NCNN_VULKAN_DRIVER", vk_driver)
                 end
-                local has_moltenvk = package:getenv("VK_ICD_FILENAMES") or package:getenv("NCNN_VULKAN_DRIVER")
+                local has_moltenvk = icd or vk_driver
                 print("================================")
                 print("has_moltenvk value = %s", has_moltenvk)
                 print("--------------------------------")
@@ -76,7 +76,12 @@ package("my-ncnn")
                         package:add("frameworks", "UIKit")
                     end
                 else
-                    package:add("links", vk_driver)
+                    local moltenvk_dir = path.directory(has_moltenvk)
+                    print("================================")
+                    print("moltenvk_dir: %s", moltenvk_dir)
+                    print("================================")
+                    package:add("linkdirs", moltenvk_dir)
+                    package:add("links", "MoltenVK")
                 end
             end
         end
