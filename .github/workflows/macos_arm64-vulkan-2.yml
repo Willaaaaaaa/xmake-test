@@ -2,7 +2,7 @@ name: macOS with vk
 
 on:
   workflow_dispatch:
-  push:
+  pull_request:
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     concurrency:
-        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}-vk
+        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}-vk-2
         # group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}-${{ matrix.ncnn_ver }}-vk
         cancel-in-progress: true
     steps:
