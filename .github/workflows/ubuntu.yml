@@ -2,7 +2,7 @@ name: Linux
 
 on:
   workflow_dispatch:
-  push:
+  # push:
 
 jobs:
   build:

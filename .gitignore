@@ -1,4 +1,7 @@
-build/
+build*/
 install/
 .xmake/
 .cache/
+ncnn-*
+CMakeLists.txt
+MoltenVK/

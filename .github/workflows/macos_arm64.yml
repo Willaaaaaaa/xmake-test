@@ -10,14 +10,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-14]
-        arch: [arm64]
         kind: [static, shared]
-        ncnn_ver: [20250916, 20260113]
+        # ncnn_ver: [20250916, 20260113]
 
     runs-on: ${{ matrix.os }}
 
     concurrency:
-        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.arch }}-${{ matrix.kind }}-${{ matrix.ncnn_ver }}
+        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}
+        # group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}-${{ matrix.ncnn_ver }}
         cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
@@ -33,7 +33,8 @@ jobs:
       - name: Configure
         run: |
           python3 --version
-          xmake f -vD -y -a ${{ matrix.arch }} -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
+          # xmake f -vD -y -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
+          xmake f -vD -y -k ${{ matrix.kind }} --ncnn_ver=20260113
 
       - name: Build
         run: |

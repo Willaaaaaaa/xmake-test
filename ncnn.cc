@@ -1,10 +1,10 @@
 // Copyright 2020 Tencent
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "ncnn/layer.h"
-#include "ncnn/net.h"
+#include "layer.h"
+#include "net.h"
 
-#include "ncnn/simpleocv.h"
+#include "simpleocv.h"
 #include <float.h>
 #include <stdio.h>
 #include <vector>

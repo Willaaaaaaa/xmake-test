@@ -27,6 +27,8 @@ package("my-ncnn")
 
     add_deps("cmake")
 
+    add_includedirs("include/ncnn")
+
     if is_plat("android") then
         add_syslinks("android")
     end
@@ -40,12 +42,28 @@ package("my-ncnn")
     end
 
     on_load(function (package)
-        local glslang_ver = package:version() and package:version() or "20260113"
+        local ncnn_ver = package:version()
+        local glslang = "my-glslang-nihui" .. (ncnn_ver and (" " .. ncnn_ver) or "")
         if package:config("vulkan") then
-            package:add("deps", "my-glslang-nihui " .. glslang_ver)
+            package:add("deps", glslang)
             if package:is_plat("macosx", "iphoneos") then
-                if package:version() and package:version():lt("20260113") then
-                    package:add("deps", "moltenvk", {configs = {shared = package:config("shared")}})
+                local icd = os.getenv("VK_ICD_FILENAMES")
+                local ncnn_vk_driver = os.getenv("NCNN_VULKAN_DRIVER")
+                if icd then
+                    package:addenv("VK_ICD_FILENAMES", icd)
+                    wprint("package(ncnn): Environment variable '%s' detected.", "VK_ICD_FILENAMES")
+                end
+                if ncnn_vk_driver then
+                    package:addenv("NCNN_VULKAN_DRIVER", ncnn_vk_driver)
+                    wprint("package(ncnn): Environment variable '%s' detected.", "NCNN_VULKAN_DRIVER")
+                end
+                local vk_driver = icd or ncnn_vk_driver
+                if ncnn_ver and ncnn_ver:lt("20260113") or not vk_driver then
+                    package:add("deps", "my-moltenvk")
+                else
+                    package:add("deps", "my-moltenvk", {configs = {vk_driver = os.getenv("NCNN_VULKAN_DRIVER") or os.getenv("VK_ICD_FILENAMES")}})
+                    wprint("               Xmake will use your MoltenVK as dependency.")
+                    wprint("               If ncnn fails to build, please unset this variable and retry")
                 end
                 package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
                 if package:is_plat("macosx") then
@@ -54,9 +72,6 @@ package("my-ncnn")
                     package:add("frameworks", "UIKit")
                 end
             end
-        end
-        if package:config("vulkan") then
-            package:add("defines", "USE_NCNN_SIMPLEOCV")
         end
 
         if package:is_plat("linux", "bsd") and package:config("threads") then
@@ -77,10 +92,14 @@ package("my-ncnn")
     end)
 
     on_install(function (package)
+        local moltenvk = package:dep("moltenvk")
+        if moltenvk and not moltenvk:config("shared") then
+            io.replace("src/CMakeLists.txt", "if(NOT NCNN_SHARED_LIB AND APPLE)", "if(APPLE)", {plain = true})
+            io.replace("src/CMakeLists.txt", "                if(NOT NCNN_SHARED_LIB)", "                if(1)", {plain = true})
+        end
         local configs = {
             "-DNCNN_BUILD_EXAMPLES=OFF",
             "-DNCNN_BUILD_TOOLS=OFF",
-            "-DNCNN_SIMPLEOCV=OFF",
             "-DNCNN_BUILD_BENCHMARK=OFF",
             "-DNCNN_BUILD_TESTS=OFF",
             "-DNCNN_PYTHON=OFF",
@@ -92,8 +111,8 @@ package("my-ncnn")
         table.insert(configs, "-DNCNN_OPENMP=" .. (package:config("openmp") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_THREADS=" .. (package:config("threads") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_C_API=" .. (package:config("c_api") and "ON" or "OFF"))
-        table.insert(configs, "-DNCNN_SIMPLEOCV=" .. (package:config("simpleocv") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_SIMPLEOMP=" .. (package:config("simpleomp") and "ON" or "OFF"))
+        table.insert(configs, "-DNCNN_SIMPLEOCV=" .. (package:config("simpleocv") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_SIMPLESTL=" .. (package:config("simplestl") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_SIMPLEMATH=" .. (package:config("simplemath") and "ON" or "OFF"))
         table.insert(configs, "-DNCNN_PIXEL=" .. (package:config("pixel") and "ON" or "OFF"))
@@ -102,8 +121,7 @@ package("my-ncnn")
         table.insert(configs, "-DNCNN_PIXEL_DRAWING=" .. (package:config("pixel_drawing") and "ON" or "OFF"))
         if package:config("vulkan") then
             table.insert(configs, "-DCMAKE_CXX_STANDARD=11")
-            if package:version() and package:version():lt("20260113") and package:is_plat("macosx", "iphoneos") then
-                local moltenvk = package:dep("moltenvk")
+            if moltenvk then
                 table.insert(configs, "-DVulkan_LIBRARY=" .. path.join(moltenvk:installdir("lib"), "libMoltenVK." .. (moltenvk:config("shared") and "dylib" or "a")))
             end
         end
@@ -113,7 +131,7 @@ package("my-ncnn")
     on_test(function (package)
         if not package:config("c_api") then
             assert(package:check_cxxsnippets({test = [[
-                #include <ncnn/net.h>
+                #include <net.h>
                 void test() {
                     ncnn::Net net;
                     net.load_param("model.param");
@@ -121,7 +139,7 @@ package("my-ncnn")
             ]]}, {configs = package:config("vulkan") and {languages = "c++11"} or {}}))
         else
             assert(package:check_csnippets({test = [[
-                #include <ncnn/c_api.h>
+                #include <c_api.h>
                 void test() {
                     const char* ver = ncnn_version();
                 }
