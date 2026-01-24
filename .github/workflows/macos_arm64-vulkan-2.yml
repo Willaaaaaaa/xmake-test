@@ -1,4 +1,4 @@
-name: macOS with vk
+name: macOS with json
 
 on:
   workflow_dispatch:
