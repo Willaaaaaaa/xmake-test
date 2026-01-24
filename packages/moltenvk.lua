@@ -61,13 +61,15 @@ package("my-moltenvk")
             end
 
             if moltenvk_dir then
-                print("---info---\nvk_driver = %s\n---info---", moltenvk_dir)
+                print("---info---\nmoltenvk_dir = %s\n---info---", moltenvk_dir)
                 local frameworkdir = find_path("MoltenVK.framework", moltenvk_dir)
                 if frameworkdir then
+                    print("---info---\nframeworkdir = %s\n---info---", frameworkdir)
                     return { frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir }
                 end
+            else
+                print("---info---\nno moltenvk_dir\n---info---")
             end
-            print("---info---\nno moltenvk_dir\n---info---")
         end
 
         if opt.system then
