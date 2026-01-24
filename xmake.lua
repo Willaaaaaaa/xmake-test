@@ -24,4 +24,4 @@ add_requireconfs("**.python 3.x", {
 
 target("xmake-test")
     add_files("ncnn.cc")
-    add_packages("ncnn")
+    add_packages("my-ncnn")

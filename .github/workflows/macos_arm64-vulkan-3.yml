@@ -45,7 +45,7 @@ jobs:
 
       - name: info
         run: |
-          xrepo info moltenvk
+          xrepo fetch moltenvk
 
       - name: Build
         run: |
