@@ -62,7 +62,7 @@ package("my-moltenvk")
 
             if moltenvk_dir then
                 print("---info---\nmoltenvk_dir = %s\n---info---", moltenvk_dir)
-                local frameworkdir = find_path("MoltenVK.framework", moltenvk_dir)
+                local frameworkdir = find_path("**/MoltenVK.framework", moltenvk_dir)
                 if frameworkdir then
                     print("---info---\nframeworkdir = %s\n---info---", frameworkdir)
                     return { frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir }
