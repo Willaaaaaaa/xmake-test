@@ -36,9 +36,9 @@ package("my-moltenvk")
         end
     end
 
-    on_fetch("macosx", function (package, opt)
+on_fetch("macosx", function (package, opt)
         import("lib.detect.find_path")
-
+        import("lib.detect.find_file")
         local vk_driver = package:config("vk_driver")
         if vk_driver then
             if os.isfile(vk_driver) then
@@ -46,12 +46,24 @@ package("my-moltenvk")
                 local name = path.filename(vk_driver)
 
                 if name == "libMoltenVK.dylib" or name == "libMoltenVK.a" then
-                    return {linkdirs = dir, links = "MoltenVK", frameworks = "MoltenVK"}
+                    return { linkdirs = dir, links = "MoltenVK" }
                 end
                 if name:endswith(".json") then
                     if os.isfile(path.join(dir, "libMoltenVK.dylib")) then
-                        return {linkdirs = {dir}, links = {"MoltenVK"}, frameworks = "MoltenVK"}
+                        return { linkdirs = dir, links = "MoltenVK" }
                     end
+                end
+            end
+
+            if os.isdir(vk_driver) then
+                local frameworkdir = find_path("MoltenVK.framework", vk_driver)
+                if frameworkdir then
+                    return {frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir}
+                end
+
+                local lib_path = find_file("libMoltenVK.dylib", vk_driver)
+                if lib_path then
+                     return { linkdirs = path.directory(lib_path), links = "MoltenVK" }
                 end
             end
         end
