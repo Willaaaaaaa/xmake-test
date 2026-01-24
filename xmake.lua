@@ -3,8 +3,6 @@ add_rules("plugin.compile_commands.autoupdate", {outputdir = "build"})
 
 add_repositories("ncnn-test https://github.com/Willaaaaaaa/xmake-repo.git patch-260116")
 
--- includes("packages/*.lua")
-
 option("ncnn_ver", {default = "undefined", showmenu = true, description = "ncnn version"})
 add_options("ncnn_ver")
 
@@ -20,10 +18,6 @@ add_requireconfs("**.python 3.x", {
     configs = {
         headeronly = is_plat("linux")
     }
-})
-
-add_requireconfs("**.moltenvk", {
-    system = true
 })
 
 target("xmake-test")
