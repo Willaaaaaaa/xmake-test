@@ -40,34 +40,34 @@ package("my-moltenvk")
         import("lib.detect.find_path")
         import("lib.detect.find_file")
         local vk_driver = package:config("vk_driver")
+        print("---info---\nvk_driver = %s\n---info---", vk_driver)
         if vk_driver then
             -- This value can be a dir or a file(dylib, a or json) path
             -- e.g. /home/xxx/dev/MoltenVK/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib
             --      /home/xxx/dev/MoltenVK/MoltenVK/dynamic/dylib/macOS/MoltenVK_icd.json
             --      /home/xxx/dev/MoltenVK/MoltenVK
+            local moltenvk_dir
             if os.isfile(vk_driver) then
                 local _, e = vk_driver:find("MoltenVK.framework", 1, true)
-                local moltenvk_dir
-                local linkdir = path.directory(vk_driver)
-                local filename = path.filename(vk_driver)
                 if not e then
-                    local _, e = vk_driver:find("MoltenVK", 1, true)
+                    _, e = vk_driver:find("MoltenVK", 1, true)
                 end
                 if e then
                     moltenvk_dir = vk_driver:sub(1, e)
                 end
+            end
+            if os.isdir(vk_driver) then
+                moltenvk_dir = vk_driver
+            end
+
+            if moltenvk_dir then
+                print("---info---\nvk_driver = %s\n---info---", moltenvk_dir)
                 local frameworkdir = find_path("MoltenVK.framework", moltenvk_dir)
                 if frameworkdir then
                     return { frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir }
                 end
             end
-
-            if os.isdir(vk_driver) then
-                local frameworkdir = find_path("MoltenVK.framework", vk_driver)
-                if frameworkdir then
-                    return { frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir }
-                end
-            end
+            print("---info---\nno moltenvk_dir\n---info---")
         end
 
         if opt.system then
