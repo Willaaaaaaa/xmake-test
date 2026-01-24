@@ -47,24 +47,22 @@ package("my-ncnn")
         if package:config("vulkan") then
             package:add("deps", glslang)
             if package:is_plat("macosx", "iphoneos") then
-                local icd = os.getenv("VK_ICD_FILENAMES")
-                local ncnn_vk_driver = os.getenv("NCNN_VULKAN_DRIVER")
-                if icd then
-                    package:addenv("VK_ICD_FILENAMES", icd)
-                    wprint("package(ncnn): Environment variable '%s' detected.", "VK_ICD_FILENAMES")
+                if ncnn_ver and ncnn_ver:ge("20260113") then
+                    local icd = os.getenv("VK_ICD_FILENAMES")
+                    local ncnn_vk_driver = os.getenv("NCNN_VULKAN_DRIVER")
+                    if icd then
+                        package:addenv("VK_ICD_FILENAMES", icd)
+                        wprint("package(ncnn): Environment variable '%s' detected.", "VK_ICD_FILENAMES")
+                    end
+                    if ncnn_vk_driver then
+                        package:addenv("NCNN_VULKAN_DRIVER", ncnn_vk_driver)
+                        wprint("package(ncnn): Environment variable '%s' detected.", "NCNN_VULKAN_DRIVER")
+                    end
+                    local vk_driver = icd or ncnn_vk_driver
                 end
-                if ncnn_vk_driver then
-                    package:addenv("NCNN_VULKAN_DRIVER", ncnn_vk_driver)
-                    wprint("package(ncnn): Environment variable '%s' detected.", "NCNN_VULKAN_DRIVER")
-                end
-                local vk_driver = icd or ncnn_vk_driver
-                if ncnn_ver and ncnn_ver:lt("20260113") or not vk_driver then
-                    package:add("deps", "my-moltenvk")
-                else
-                    package:add("deps", "my-moltenvk", {configs = {vk_driver = os.getenv("NCNN_VULKAN_DRIVER") or os.getenv("VK_ICD_FILENAMES")}})
-                    wprint("               Xmake will use your MoltenVK as dependency.")
-                    wprint("               If ncnn fails to build, please unset this variable and retry")
-                end
+                package:add("deps", "my-moltenvk", {configs = {vk_driver = vk_driver}})
+                wprint("               Xmake will use your MoltenVK as dependency.")
+                wprint("               If ncnn fails to build, please unset this variable and retry")
                 package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
                 if package:is_plat("macosx") then
                     package:add("frameworks", "IOKit", "AppKit")
@@ -121,7 +119,7 @@ package("my-ncnn")
         table.insert(configs, "-DNCNN_PIXEL_DRAWING=" .. (package:config("pixel_drawing") and "ON" or "OFF"))
         if package:config("vulkan") then
             table.insert(configs, "-DCMAKE_CXX_STANDARD=11")
-            if moltenvk then
+            if package:version() and package:version():lt("20260113") then
                 table.insert(configs, "-DVulkan_LIBRARY=" .. path.join(moltenvk:installdir("lib"), "libMoltenVK." .. (moltenvk:config("shared") and "dylib" or "a")))
             end
         end

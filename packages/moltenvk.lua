@@ -36,11 +36,15 @@ package("my-moltenvk")
         end
     end
 
-on_fetch("macosx", function (package, opt)
+    on_fetch("macosx", function (package, opt)
         import("lib.detect.find_path")
         import("lib.detect.find_file")
         local vk_driver = package:config("vk_driver")
         if vk_driver then
+            -- This value can be a dir or a file(dylib, a or json) path
+            -- e.g. /home/xxx/dev/MoltenVK/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib
+            --      /home/xxx/dev/MoltenVK/MoltenVK/dynamic/dylib/macOS/MoltenVK_icd.json
+            --      /home/xxx/dev/MoltenVK/MoltenVK
             if os.isfile(vk_driver) then
                 local dir = path.directory(vk_driver)
                 local name = path.filename(vk_driver)
@@ -58,12 +62,12 @@ on_fetch("macosx", function (package, opt)
             if os.isdir(vk_driver) then
                 local frameworkdir = find_path("MoltenVK.framework", vk_driver)
                 if frameworkdir then
-                    return {frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir}
+                    return { frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir }
                 end
 
                 local lib_path = find_file("libMoltenVK.dylib", vk_driver)
                 if lib_path then
-                     return { linkdirs = path.directory(lib_path), links = "MoltenVK" }
+                    return { linkdirs = path.directory(lib_path), links = "MoltenVK" }
                 end
             end
         end
@@ -71,7 +75,7 @@ on_fetch("macosx", function (package, opt)
         if opt.system then
             local frameworkdir = find_path("vulkan.framework", "~/VulkanSDK/*/macOS/Frameworks")
             if frameworkdir then
-                return {frameworkdirs = frameworkdir, frameworks = "vulkan", rpathdirs = frameworkdir}
+                return { frameworkdirs = frameworkdir, frameworks = "vulkan", rpathdirs = frameworkdir }
             end
         end
     end)
