@@ -46,16 +46,19 @@ package("my-moltenvk")
             --      /home/xxx/dev/MoltenVK/MoltenVK/dynamic/dylib/macOS/MoltenVK_icd.json
             --      /home/xxx/dev/MoltenVK/MoltenVK
             if os.isfile(vk_driver) then
-                local dir = path.directory(vk_driver)
-                local name = path.filename(vk_driver)
-
-                if name == "libMoltenVK.dylib" or name == "libMoltenVK.a" then
-                    return { linkdirs = dir, links = "MoltenVK" }
+                local _, e = vk_driver:find("MoltenVK.framework", 1, true)
+                local moltenvk_dir
+                local linkdir = path.directory(vk_driver)
+                local filename = path.filename(vk_driver)
+                if not e then
+                    local _, e = vk_driver:find("MoltenVK", 1, true)
                 end
-                if name:endswith(".json") then
-                    if os.isfile(path.join(dir, "libMoltenVK.dylib")) then
-                        return { linkdirs = dir, links = "MoltenVK" }
-                    end
+                if e then
+                    moltenvk_dir = vk_driver:sub(1, e)
+                end
+                local frameworkdir = find_path("MoltenVK.framework", moltenvk_dir)
+                if frameworkdir then
+                    return { frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir }
                 end
             end
 
@@ -63,11 +66,6 @@ package("my-moltenvk")
                 local frameworkdir = find_path("MoltenVK.framework", vk_driver)
                 if frameworkdir then
                     return { frameworkdirs = frameworkdir, frameworks = "MoltenVK", rpathdirs = frameworkdir }
-                end
-
-                local lib_path = find_file("libMoltenVK.dylib", vk_driver)
-                if lib_path then
-                    return { linkdirs = path.directory(lib_path), links = "MoltenVK" }
                 end
             end
         end
