@@ -48,40 +48,28 @@ package("my-ncnn")
             package:add("deps", glslang)
             if package:is_plat("macosx", "iphoneos") then
                 local icd = os.getenv("VK_ICD_FILENAMES")
-                local vk_driver = os.getenv("NCNN_VULKAN_DRIVER")
+                local ncnn_vk_driver = os.getenv("NCNN_VULKAN_DRIVER")
                 if icd then
                     package:addenv("VK_ICD_FILENAMES", icd)
+                    wprint("package(ncnn): Environment variable '%s' detected.", "VK_ICD_FILENAMES")
                 end
-                if vk_driver then
-                    package:addenv("NCNN_VULKAN_DRIVER", vk_driver)
+                if ncnn_vk_driver then
+                    package:addenv("NCNN_VULKAN_DRIVER", ncnn_vk_driver)
+                    wprint("package(ncnn): Environment variable '%s' detected.", "NCNN_VULKAN_DRIVER")
                 end
-                local has_moltenvk = icd or vk_driver
-                print("================================")
-                print("has_moltenvk value = %s", has_moltenvk)
-                print("--------------------------------")
-                print("Package env:")
-                print("VK_ICD_FILENAMES   = %s", package:getenv("VK_ICD_FILENAMES") or "nil")
-                print("NCNN_VULKAN_DRIVER = %s", package:getenv("NCNN_VULKAN_DRIVER") or "nil")
-                print("--------------------------------")
-                print("OS env:")
-                print("VK_ICD_FILENAMES   = %s", icd or "nil")
-                print("NCNN_VULKAN_DRIVER = %s", vk_driver or "nil")
-                print("================================")
-                if ncnn_ver and ncnn_ver:lt("20260113") or not has_moltenvk then
-                    package:add("deps", "moltenvk")
-                    package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
-                    if package:is_plat("macosx") then
-                        package:add("frameworks", "IOKit", "AppKit")
-                    else
-                        package:add("frameworks", "UIKit")
-                    end
+                local vk_driver = icd or ncnn_vk_driver
+                if ncnn_ver and ncnn_ver:lt("20260113") or not vk_driver then
+                    package:add("deps", "my-moltenvk")
                 else
-                    local moltenvk_dir = path.directory(has_moltenvk)
-                    print("================================")
-                    print("moltenvk_dir: %s", moltenvk_dir)
-                    print("================================")
-                    package:add("linkdirs", moltenvk_dir)
-                    package:add("links", "MoltenVK")
+                    package:add("deps", "my-moltenvk", {configs = {vk_driver = os.getenv("NCNN_VULKAN_DRIVER") or os.getenv("VK_ICD_FILENAMES")}})
+                    wprint("               Xmake will use your MoltenVK as dependency.")
+                    wprint("               If ncnn fails to build, please unset this variable and retry")
+                end
+                package:add("frameworks", "Metal", "Foundation", "QuartzCore", "CoreGraphics", "IOSurface")
+                if package:is_plat("macosx") then
+                    package:add("frameworks", "IOKit", "AppKit")
+                else
+                    package:add("frameworks", "UIKit")
                 end
             end
         end
@@ -107,8 +95,7 @@ package("my-ncnn")
         local moltenvk = package:dep("moltenvk")
         if moltenvk and not moltenvk:config("shared") then
             io.replace("src/CMakeLists.txt", "if(NOT NCNN_SHARED_LIB AND APPLE)", "if(APPLE)", {plain = true})
-            local _, count = io.replace("src/CMakeLists.txt", "                if(NOT NCNN_SHARED_LIB)", "                if(1)", {plain = true})
-            print("---info---\nio.replace() count = %d\n--------", count)
+            io.replace("src/CMakeLists.txt", "                if(NOT NCNN_SHARED_LIB)", "                if(1)", {plain = true})
         end
         local configs = {
             "-DNCNN_BUILD_EXAMPLES=OFF",
