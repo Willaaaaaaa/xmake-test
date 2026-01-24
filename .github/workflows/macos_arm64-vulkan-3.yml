@@ -1,0 +1,57 @@
+name: macOS with vk
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14]
+        kind: [static, shared]
+        # ncnn_ver: [20250916, 20260113]
+
+    runs-on: ${{ matrix.os }}
+
+    concurrency:
+        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}-vk
+        # group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}-${{ matrix.ncnn_ver }}-vk
+        cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: branch@master
+          actions-cache-folder: '.xmake-cache'
+
+      - name: Download
+        run: |
+          brew install tree
+          wget -q https://github.com/KhronosGroup/MoltenVK/releases/download/v1.4.1/MoltenVK-macos.tar
+          tar -xf MoltenVK-macos.tar
+          ls
+          tree MoltenVK
+          MVK_PATH="$GITHUB_WORKSPACE/MoltenVK/MoltenVK"
+          echo "Found MoltenVK at: $MVK_PATH"
+          echo "NCNN_VULKAN_DRIVER=$MVK_PATH" >> $GITHUB_ENV
+
+      - name: Configure
+        run: |
+          python3 --version
+          xmake f -D -y -k ${{ matrix.kind }} --ncnn_ver=20260113
+          # xmake f -D -y -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
+
+      - name: info
+        run: |
+          xrepo info moltenvk
+
+      - name: Build
+        run: |
+          xmake build -D
+
+      - name: Install
+        run: |
+          xmake install -D -o ./install
+          tree ./install
