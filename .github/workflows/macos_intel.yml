@@ -1,0 +1,47 @@
+name: macOS
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15-intel]
+        kind: [static, shared]
+        # ncnn_ver: [20250916, 20260113]
+
+    runs-on: ${{ matrix.os }}
+
+    concurrency:
+        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}
+        # group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-macOS-${{ matrix.kind }}-${{ matrix.ncnn_ver }}
+        cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: branch@master
+          actions-cache-folder: '.xmake-cache'
+
+      - name: Download
+        run: |
+          brew install tree
+
+      - name: Configure
+        run: |
+          python3 --version
+          # xmake f -vD -y -k ${{ matrix.kind }} --ncnn_ver=${{ matrix.ncnn_ver }}
+          xmake f -vD -y -k ${{ matrix.kind }} --ncnn_ver=20260113
+
+      - name: Build
+        run: |
+          xmake build -vD
+
+      - name: Install
+        run: |
+          xmake install -vD -o ./install
+          tree ./install
